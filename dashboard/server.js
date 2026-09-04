@@ -316,36 +316,108 @@ async function getGpuMetrics() {
   return gpu;
 }
 
+// Helper to select the most appropriate primary mount point from multiple mount points
+function selectPrimaryMount(mounts) {
+  if (!mounts || mounts.length === 0) return '/';
+  if (mounts.includes('/ (Host Root)')) return '/ (Host Root)';
+  if (mounts.includes('/')) return '/';
+
+  const sorted = [...mounts].sort((a, b) => {
+    const aHidden = a.includes('/.');
+    const bHidden = b.includes('/.');
+    if (aHidden && !bHidden) return 1;
+    if (!aHidden && bHidden) return -1;
+
+    const aStandard = /^\/(home|mnt|media|data|storage|var|boot|opt|srv)(\/|$)/.test(a);
+    const bStandard = /^\/(home|mnt|media|data|storage|var|boot|opt|srv)(\/|$)/.test(b);
+    if (aStandard && !bStandard) return -1;
+    if (!aStandard && bStandard) return 1;
+
+    return a.length - b.length;
+  });
+
+  return sorted[0];
+}
+
 // Collect dynamic metrics (Dashdot style)
 async function getDynamicMetrics() {
   try {
-    const [currentLoad, mem, fsSize, networkStats, timeInfo, cpuTemp, gpuStats] = await Promise.all([
+    const [currentLoad, mem, fsSize, blockDevs, networkStats, timeInfo, cpuTemp, gpuStats] = await Promise.all([
       si.currentLoad(),
       si.mem(),
       si.fsSize(),
+      si.blockDevices().catch(() => []),
       si.networkStats(),
       si.time(),
       getCpuTemperature(),
       getGpuMetrics()
     ]);
 
-    // Disks: filter out tiny mounts, squashfs, loop devices
-    const filteredDisks = fsSize
-      .filter(d => {
-        if (!d.size || d.size < 100 * 1024 * 1024) return false;
-        if (d.fs && (d.fs.includes('loop') || d.fs.includes('tmpfs') || d.fs.includes('overlay'))) {
-          if (d.mount !== '/' && d.mount !== '/mnt/host') return false;
+    // Build block device map for partition metadata lookup
+    const blockMap = new Map();
+    if (Array.isArray(blockDevs)) {
+      for (const b of blockDevs) {
+        if (b.name) blockMap.set(b.name, b);
+      }
+    }
+
+    // Check if physical block devices exist in fsSize
+    const hasPhysicalDisks = Array.isArray(fsSize) && fsSize.some(d => d.fs && d.fs.startsWith('/dev/'));
+
+    // Mounted partitions: group by filesystem device/partition instead of listing every mount point
+    const partitionMap = new Map();
+
+    if (Array.isArray(fsSize)) {
+      for (const d of fsSize) {
+        if (!d.size || d.size < 100 * 1024 * 1024) continue;
+
+        const fsLower = (d.fs || '').toLowerCase();
+        const typeLower = (d.type || '').toLowerCase();
+
+        // Filter out pseudo/virtual filesystems
+        if (fsLower.includes('loop') || fsLower.includes('tmpfs') || fsLower.includes('devtmpfs') ||
+            fsLower.includes('efivarfs') || fsLower.includes('squashfs') || fsLower === 'none' ||
+            fsLower === 'udev' || typeLower === 'tmpfs' || typeLower === 'devtmpfs' ||
+            typeLower === 'efivarfs' || typeLower === 'squashfs') {
+          continue;
         }
-        return true;
-      })
-      .map(d => ({
-        mount: d.mount === '/mnt/host' ? '/ (Host Root)' : d.mount,
-        type: d.type || 'ext4',
-        size: d.size,
-        used: d.used,
-        available: d.available,
-        usePercent: Math.round(d.use || (d.used / d.size) * 100)
-      }));
+
+        // If physical partitions exist, skip container overlayfs
+        if (hasPhysicalDisks && (fsLower.includes('overlay') || typeLower === 'overlay')) {
+          continue;
+        }
+
+        const partKey = d.fs || d.mount;
+        const cleanMount = d.mount === '/mnt/host' ? '/ (Host Root)' : d.mount;
+
+        if (!partitionMap.has(partKey)) {
+          const partName = d.fs ? (d.fs.startsWith('/dev/') ? d.fs.slice(5) : d.fs) : cleanMount;
+          const bDev = blockMap.get(partName) || null;
+          const displayName = (bDev && bDev.label) ? `${bDev.label} (${partName})` : partName;
+
+          partitionMap.set(partKey, {
+            fs: d.fs || partName,
+            name: displayName,
+            label: (bDev && bDev.label) || '',
+            mount: cleanMount,
+            mounts: [cleanMount],
+            type: d.type || (bDev && bDev.fsType) || 'ext4',
+            size: d.size,
+            used: d.used,
+            available: d.available,
+            usePercent: Math.round(d.use || (d.used / d.size) * 100)
+          });
+        } else {
+          const item = partitionMap.get(partKey);
+          if (!item.mounts.includes(cleanMount)) {
+            item.mounts.push(cleanMount);
+          }
+          item.mount = selectPrimaryMount(item.mounts);
+        }
+      }
+    }
+
+    const filteredDisks = Array.from(partitionMap.values());
 
     // Network stats calculation
     let rx_sec = 0;

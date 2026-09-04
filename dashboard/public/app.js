@@ -373,21 +373,30 @@
       drawSparkline(elements.ramSparkline, state.statsHistory.ram, 'rgb(168, 85, 247)');
     }
 
-    // Disks
+    // Mounted Partitions (Drive Capacity)
     if (metrics.disks && elements.diskListContainer) {
-      elements.disksCountBadge.textContent = `${metrics.disks.length} Mounted`;
+      elements.disksCountBadge.textContent = `${metrics.disks.length} ${metrics.disks.length === 1 ? 'Partition' : 'Partitions'}`;
       if (metrics.disks.length === 0) {
-        elements.diskListContainer.innerHTML = '<div class="disk-item-placeholder">No mounted disks detected.</div>';
+        elements.diskListContainer.innerHTML = '<div class="disk-item-placeholder">No mounted partitions detected.</div>';
       } else {
         elements.diskListContainer.innerHTML = metrics.disks.map(d => {
           let statusClass = 'normal';
           if (d.usePercent > 85) statusClass = 'danger';
           else if (d.usePercent > 70) statusClass = 'warning';
 
+          const mountDisplay = d.mount || '/';
+          const partLabel = d.name || (d.fs ? d.fs.replace('/dev/', '') : mountDisplay);
+          const showMountTag = partLabel !== mountDisplay;
+          const mountTooltip = d.mounts && d.mounts.length > 1 ? `Mount points: ${d.mounts.join(', ')}` : `Mount: ${mountDisplay}`;
+          const fullTooltip = `Partition: ${d.fs || partLabel}\n${mountTooltip}\nType: ${d.type || 'N/A'}\nAvailable: ${formatBytes(d.available)} / ${formatBytes(d.size)}`;
+
           return `
-            <div class="disk-item">
+            <div class="disk-item" title="${escapeHtml(fullTooltip)}">
               <div class="disk-header">
-                <span class="disk-mount" title="${d.mount}">${d.mount}</span>
+                <div class="disk-ident">
+                  <span class="disk-name">${escapeHtml(partLabel)}</span>
+                  ${showMountTag ? `<span class="disk-mount-tag">${escapeHtml(mountDisplay)}</span>` : ''}
+                </div>
                 <span class="disk-stats">${formatBytes(d.used)} / ${formatBytes(d.size)} (${d.usePercent}%)</span>
               </div>
               <div class="progress-bar-bg">

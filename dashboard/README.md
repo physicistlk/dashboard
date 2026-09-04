@@ -14,7 +14,7 @@ A modern, unified homelab web portal and server dashboard built for mini PCs and
   - **AMD Radeon APUs & GPUs**: Load & thermal readings via `/sys/class/drm/` and `gpu_busy_percent`.
   - **NVIDIA GPUs**: Native `nvidia-smi` queries for utilization, VRAM, clock, and temperature.
 - **Memory (RAM)**: Real-time RAM utilization gauge, used / total capacity, available/free memory, and sparkline chart.
-- **Storage Disks**: Automatic detection of host disk mount points with dynamic usage progress bars and color-coded threshold warnings (`normal`, `warning > 70%`, `danger > 85%`).
+- **Drive Capacity (Mounted Partitions)**: Automatic detection and consolidation of mounted disk partitions with dynamic usage progress bars, partition deduplication, mount points, and color-coded threshold warnings (`normal`, `warning > 70%`, `danger > 85%`).
 - **Network Traffic**: Live RX (download) and TX (upload) bandwidth throughput meters (`KB/s` / `MB/s`) and active interface badge.
 - **Host Specs & Uptime**: Distro name, Linux kernel version, hardware model, hostname, and live uptime counter.
 

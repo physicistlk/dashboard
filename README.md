@@ -5,6 +5,9 @@
 
 A modern, unified homelab web portal and server dashboard built for mini PCs and homelab servers. It fuses the real-time hardware telemetry and glassmorphic aesthetic of **dash.** (Dashdot) with the customizable application launcher, category management, and service health checks of **Heimdall**.
 
+
+![Dashboard home page preview](image1.png)
+
 ---
 
 ## 🌟 Key Features
@@ -63,7 +66,7 @@ A modern, unified homelab web portal and server dashboard built for mini PCs and
 │   ├── styles.css              # Glassmorphic responsive styling & themes
 │   ├── app.js                  # Telemetry streams, charts & UI controller
 │   └── icons.js                # Embedded offline SVG icon library
-└── README.md                   # Documentation & deployment guide
+├── image1.png                  # Home page preview screenshot shown in README
 ```
 
 ---

@@ -1,5 +1,8 @@
 # 🚀 Dashboard — Combined Dash. (Dashdot) & Heimdall Container
 
+> [!CAUTION]
+> This project is made using agy2. Caution is advised for use and app stability.
+
 A modern, unified homelab web portal and server dashboard built for mini PCs and homelab servers. It fuses the real-time hardware telemetry and glassmorphic aesthetic of **dash.** (Dashdot) with the customizable application launcher, category management, and service health checks of **Heimdall**.
 
 ---

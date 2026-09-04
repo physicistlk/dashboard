@@ -145,6 +145,33 @@ podman run -d \
 | `PORT` | `3110` | Port the web server listens on inside the container. |
 | `DATA_DIR` | `/app/data` | Directory where `config.json` is stored. |
 | `NODE_ENV` | `production` | Node.js production environment mode. |
+| `NPM_URL` | `http://nginx-proxy-manager:81` | Nginx Proxy Manager API endpoint URL on the `proxy` Docker network. |
+| `NPM_EMAIL` | *(optional)* | Default NPM administrator email for auto-discovery. |
+| `NPM_PASSWORD` | *(optional)* | Default NPM administrator password for auto-discovery. |
+
+---
+
+## 🌐 Nginx Proxy Manager (ngx) Auto-Discovery
+
+The dashboard can directly discover and import your proxy hosts from your **Nginx Proxy Manager** (`nginx-proxy-manager`) container over the shared Docker network:
+
+1. **Ensure the Docker Network is connected**:
+   Make sure both the `nginx-proxy-manager` container and the `dashboard` container are attached to the `proxy` Docker network:
+   ```yaml
+   networks:
+     - proxy
+
+   networks:
+     proxy:
+       name: proxy
+       external: true
+   ```
+2. **Importing Applications**:
+   - Click the **"Sync Proxy"** button in the dashboard top navigation bar.
+   - Enter your NPM URL (defaults to `http://nginx-proxy-manager:81`), Email, and Password.
+   - Click **Fetch Hosts**: The dashboard queries `/api/nginx/proxy-hosts`, extracts all domain names and targets, automatically matches them against 50+ homelab icon and brand color presets, and flags existing duplicates.
+   - Select the apps you want and click **Import Selected**.
+   - Your newly imported services appear on the dashboard grid with live background health checks!
 
 ---
 

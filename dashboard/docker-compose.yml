@@ -12,6 +12,13 @@ services:
       - NODE_ENV=production
       - PORT=3110
       - DATA_DIR=/app/data
+      # Nginx Proxy Manager integration (accessible on the shared 'proxy' network)
+      - NPM_URL=http://nginx-proxy-manager:81
+      # - NPM_EMAIL=admin@example.com
+      # - NPM_PASSWORD=changeme
+    networks:
+      - default
+      - proxy
     volumes:
       # Persistent homelab configuration, apps, categories, and settings
       - ./data:/app/data
@@ -33,4 +40,8 @@ services:
     #         - driver: nvidia
     #           count: all
     #           capabilities: [gpu]
+
+networks:
+  proxy:
+    external: true
 

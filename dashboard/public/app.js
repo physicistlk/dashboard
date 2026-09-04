@@ -30,7 +30,9 @@
       ram: new Array(30).fill(0)
     },
     editingAppId: null,
-    statsVisible: true
+    statsVisible: true,
+    npmHosts: [],
+    selectedNpmHostIds: new Set()
   };
 
   // Search Engines
@@ -130,7 +132,22 @@
     showGpuWidgetCheck: document.getElementById('showGpuWidgetCheck'),
     showRamWidgetCheck: document.getElementById('showRamWidgetCheck'),
     showStorageWidgetCheck: document.getElementById('showStorageWidgetCheck'),
-    showNetworkWidgetCheck: document.getElementById('showNetworkWidgetCheck')
+    showNetworkWidgetCheck: document.getElementById('showNetworkWidgetCheck'),
+
+    // NPM Sync Modal
+    syncNpmBtn: document.getElementById('syncNpmBtn'),
+    npmSyncModal: document.getElementById('npmSyncModal'),
+    npmConnectForm: document.getElementById('npmConnectForm'),
+    npmUrlInput: document.getElementById('npmUrlInput'),
+    npmEmailInput: document.getElementById('npmEmailInput'),
+    npmPasswordInput: document.getElementById('npmPasswordInput'),
+    npmFetchBtn: document.getElementById('npmFetchBtn'),
+    npmFetchStatus: document.getElementById('npmFetchStatus'),
+    npmDiscoveredSection: document.getElementById('npmDiscoveredSection'),
+    npmHostsListContainer: document.getElementById('npmHostsListContainer'),
+    npmHostCount: document.getElementById('npmHostCount'),
+    npmImportBtn: document.getElementById('npmImportBtn'),
+    npmSelectedCount: document.getElementById('npmSelectedCount')
   };
 
   // Helper formatting functions
@@ -1023,6 +1040,208 @@
     reader.readAsText(file);
   };
 
+  // --- Nginx Proxy Manager Sync Handlers ---
+  window.openNpmSyncModal = async function () {
+    if (!elements.npmSyncModal) return;
+    elements.npmSyncModal.style.display = 'flex';
+    if (elements.npmFetchStatus) elements.npmFetchStatus.style.display = 'none';
+
+    // Fetch defaults from server if available
+    try {
+      const res = await fetch('/api/npm/config').then(r => r.json());
+      if (res.url && elements.npmUrlInput && !elements.npmUrlInput.value) {
+        elements.npmUrlInput.value = res.url;
+      }
+      if (res.email && elements.npmEmailInput && !elements.npmEmailInput.value) {
+        elements.npmEmailInput.value = res.email;
+      }
+    } catch (_) {}
+  };
+
+  window.closeNpmSyncModal = function () {
+    if (elements.npmSyncModal) elements.npmSyncModal.style.display = 'none';
+  };
+
+  window.handleFetchNpmHosts = async function (e) {
+    if (e) e.preventDefault();
+    const url = elements.npmUrlInput.value.trim();
+    const email = elements.npmEmailInput.value.trim();
+    const password = elements.npmPasswordInput.value;
+
+    if (!url || !email || !password) {
+      showNpmStatus('Please fill in NPM URL, Email, and Password.', 'error');
+      return;
+    }
+
+    elements.npmFetchBtn.disabled = true;
+    elements.npmFetchBtn.innerHTML = `<span>Connecting...</span>`;
+    showNpmStatus(`Connecting to ${url} on the proxy network...`, 'info');
+
+    try {
+      const res = await fetch('/api/npm/hosts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, email, password })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to fetch hosts');
+      }
+
+      state.npmHosts = data.hosts || [];
+      state.selectedNpmHostIds.clear();
+
+      // Automatically select newly found hosts
+      state.npmHosts.forEach(h => {
+        if (!h.alreadyAdded) {
+          state.selectedNpmHostIds.add(h.npmId);
+        }
+      });
+
+      showNpmStatus(`Successfully connected! Found ${state.npmHosts.length} proxy host(s).`, 'success');
+      renderNpmHostsList();
+    } catch (err) {
+      showNpmStatus(err.message, 'error');
+      if (elements.npmDiscoveredSection) elements.npmDiscoveredSection.style.display = 'none';
+      if (elements.npmImportBtn) elements.npmImportBtn.style.display = 'none';
+    } finally {
+      elements.npmFetchBtn.disabled = false;
+      elements.npmFetchBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <span>Fetch Hosts</span>
+      `;
+    }
+  };
+
+  function showNpmStatus(message, type) {
+    if (!elements.npmFetchStatus) return;
+    elements.npmFetchStatus.textContent = message;
+    elements.npmFetchStatus.className = `npm-status-banner ${type}`;
+    elements.npmFetchStatus.style.display = 'block';
+  }
+
+  function renderNpmHostsList() {
+    if (!state.npmHosts || state.npmHosts.length === 0) {
+      if (elements.npmDiscoveredSection) elements.npmDiscoveredSection.style.display = 'none';
+      if (elements.npmImportBtn) elements.npmImportBtn.style.display = 'none';
+      return;
+    }
+
+    if (elements.npmHostCount) elements.npmHostCount.textContent = state.npmHosts.length;
+    if (elements.npmDiscoveredSection) elements.npmDiscoveredSection.style.display = 'block';
+    updateNpmSelectedCount();
+
+    elements.npmHostsListContainer.innerHTML = state.npmHosts.map(host => {
+      const isSelected = state.selectedNpmHostIds.has(host.npmId);
+      const iconSvg = getIconSvg(host.icon || 'globe', '#ffffff', 20);
+      return `
+        <div class="discovered-host-card ${host.alreadyAdded ? 'already-added' : ''}" onclick="window.handleCardClick(event, ${host.npmId})">
+          <input type="checkbox" class="discovered-host-checkbox" 
+            id="npm_check_${host.npmId}" 
+            ${isSelected ? 'checked' : ''} 
+            onchange="window.handleToggleNpmHost(${host.npmId}, this.checked)">
+          
+          <div class="discovered-host-icon" style="background: ${host.color || '#3B82F6'};">
+            ${iconSvg}
+          </div>
+
+          <div class="discovered-host-info">
+            <div class="discovered-host-name-row">
+              <span class="discovered-host-name">${escapeHtml(host.name)}</span>
+              <div class="discovered-host-badges">
+                ${host.alreadyAdded 
+                  ? '<span class="badge-added">Already in Dashboard</span>' 
+                  : '<span class="badge-new">New</span>'}
+              </div>
+            </div>
+            <a href="${escapeHtml(host.url)}" target="_blank" class="discovered-host-url" onclick="event.stopPropagation()">
+              ${escapeHtml(host.url)}
+            </a>
+            <div class="discovered-host-meta">
+              Target: ${escapeHtml(host.forwardHost)}:${escapeHtml(String(host.forwardPort))} • Category: ${escapeHtml(host.category)}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.handleCardClick = function (e, npmId) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'A') return;
+    const isChecked = state.selectedNpmHostIds.has(npmId);
+    window.handleToggleNpmHost(npmId, !isChecked);
+    const cb = document.getElementById(`npm_check_${npmId}`);
+    if (cb) cb.checked = !isChecked;
+  };
+
+  window.handleToggleNpmHost = function (npmId, checked) {
+    if (checked) {
+      state.selectedNpmHostIds.add(npmId);
+    } else {
+      state.selectedNpmHostIds.delete(npmId);
+    }
+    updateNpmSelectedCount();
+  };
+
+  window.handleSelectAllNpm = function (newOnly) {
+    state.selectedNpmHostIds.clear();
+    state.npmHosts.forEach(h => {
+      if (!newOnly || !h.alreadyAdded) {
+        state.selectedNpmHostIds.add(h.npmId);
+      }
+    });
+    state.npmHosts.forEach(h => {
+      const cb = document.getElementById(`npm_check_${h.npmId}`);
+      if (cb) cb.checked = state.selectedNpmHostIds.has(h.npmId);
+    });
+    updateNpmSelectedCount();
+  };
+
+  function updateNpmSelectedCount() {
+    const count = state.selectedNpmHostIds.size;
+    if (elements.npmSelectedCount) elements.npmSelectedCount.textContent = count;
+    if (elements.npmImportBtn) elements.npmImportBtn.style.display = count > 0 ? 'inline-flex' : 'none';
+  }
+
+  window.handleImportSelectedNpm = async function () {
+    const selectedHosts = state.npmHosts.filter(h => state.selectedNpmHostIds.has(h.npmId));
+    if (selectedHosts.length === 0) return;
+
+    elements.npmImportBtn.disabled = true;
+    elements.npmImportBtn.textContent = 'Importing...';
+
+    const url = elements.npmUrlInput.value.trim();
+    const email = elements.npmEmailInput.value.trim();
+
+    try {
+      const res = await fetch('/api/npm/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url,
+          email,
+          hosts: selectedHosts
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to import selected hosts');
+      }
+
+      showNpmStatus(`Successfully imported ${data.addedCount} apps to your dashboard!`, 'success');
+      setTimeout(() => {
+        closeNpmSyncModal();
+      }, 900);
+    } catch (err) {
+      showNpmStatus('Import failed: ' + err.message, 'error');
+    } finally {
+      elements.npmImportBtn.disabled = false;
+      updateNpmSelectedCount();
+    }
+  };
+
   // Web Search & Filter Handler
   function executeWebSearch(query) {
     if (!query) return;
@@ -1035,6 +1254,9 @@
   function bindEvents() {
     // Add App button
     if (elements.addAppBtn) elements.addAppBtn.addEventListener('click', window.openAddAppModal);
+
+    // Sync Proxy button
+    if (elements.syncNpmBtn) elements.syncNpmBtn.addEventListener('click', window.openNpmSyncModal);
 
     // Categories button
     if (elements.categoriesBtn) elements.categoriesBtn.addEventListener('click', window.openCategoryModal);
@@ -1055,20 +1277,14 @@
     // Live search input
     if (elements.appSearchInput) {
       elements.appSearchInput.addEventListener('input', (e) => {
-        state.searchQuery = e.target.value;
+        state.searchQuery = e.target.value.trim().toLowerCase();
         renderAppsGrid();
       });
 
       elements.appSearchInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-          // If search query has matches, do not auto open web search unless explicit, or open web search if no matching apps
-          const q = state.searchQuery.trim();
-          if (q) {
-            const hasExactMatch = state.apps.some(a => a.name.toLowerCase() === q.toLowerCase());
-            if (!hasExactMatch) {
-              executeWebSearch(q);
-            }
-          }
+          const q = elements.appSearchInput.value.trim();
+          if (q) executeWebSearch(q);
         }
       });
     }
@@ -1092,9 +1308,10 @@
       }
       // Escape closes modals
       if (e.key === 'Escape') {
-        if (elements.appModal.style.display === 'flex') closeAppModal();
-        if (elements.categoryModal.style.display === 'flex') closeCategoryModal();
-        if (elements.settingsModal.style.display === 'flex') closeSettingsModal();
+        if (elements.appModal && elements.appModal.style.display === 'flex') closeAppModal();
+        if (elements.categoryModal && elements.categoryModal.style.display === 'flex') closeCategoryModal();
+        if (elements.settingsModal && elements.settingsModal.style.display === 'flex') closeSettingsModal();
+        if (elements.npmSyncModal && elements.npmSyncModal.style.display === 'flex') closeNpmSyncModal();
       }
     });
   }

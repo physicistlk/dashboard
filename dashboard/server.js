@@ -676,6 +676,246 @@ app.put('/api/settings', (req, res) => {
   res.json(config.settings);
 });
 
+// --- Nginx Proxy Manager (NPM) Integration ---
+const NPM_DEFAULT_URL = process.env.NPM_URL || 'http://nginx-proxy-manager:81';
+const NPM_DEFAULT_EMAIL = process.env.NPM_EMAIL || '';
+const NPM_DEFAULT_PASSWORD = process.env.NPM_PASSWORD || '';
+
+function matchPresetForService(serviceName, forwardHost) {
+  const normalize = (str) => (str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const candidateNorm = normalize(serviceName);
+  const hostNorm = normalize(forwardHost);
+
+  // Check exact/normalized matches against presets
+  for (const p of presets) {
+    const pNorm = normalize(p.name);
+    const pId = normalize(p.id);
+    if (
+      candidateNorm === pNorm ||
+      candidateNorm === pId ||
+      hostNorm === pNorm ||
+      hostNorm === pId ||
+      (candidateNorm.length >= 3 && pNorm.includes(candidateNorm)) ||
+      (pNorm.length >= 3 && candidateNorm.includes(pNorm))
+    ) {
+      const categoryId = (p.category || 'all').toLowerCase().replace(/\s+/g, '-');
+      return {
+        name: p.name,
+        icon: p.icon || 'globe',
+        color: p.color || '#3B82F6',
+        category: categoryId,
+        description: p.description || ''
+      };
+    }
+  }
+
+  // Format candidate name nicely (e.g. "my-custom-service" -> "My Custom Service")
+  const words = (serviceName || forwardHost || 'Service')
+    .replace(/[-_.]+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+  const friendlyName = words.join(' ');
+
+  return {
+    name: friendlyName,
+    icon: 'globe',
+    color: '#3B82F6',
+    category: 'infrastructure',
+    description: forwardHost ? `NPM Proxy to ${forwardHost}` : 'Reverse proxy service'
+  };
+}
+
+async function getNpmAuthToken(baseUrl, email, password) {
+  const tokenUrl = `${baseUrl.replace(/\/+$/, '')}/api/tokens`;
+  const response = await fetch(tokenUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ identity: email, secret: password })
+  });
+
+  if (!response.ok) {
+    let errorDetail = response.statusText;
+    try {
+      const errJson = await response.json();
+      if (errJson.error?.message) errorDetail = errJson.error.message;
+    } catch (_) {}
+    throw new Error(`NPM Authentication failed (${response.status}): ${errorDetail}`);
+  }
+
+  const data = await response.json();
+  if (!data.token) {
+    throw new Error('NPM did not return a valid authentication token');
+  }
+  return data.token;
+}
+
+async function fetchNpmHostsList(baseUrl, email, password) {
+  const cleanUrl = baseUrl.replace(/\/+$/, '');
+  const token = await getNpmAuthToken(cleanUrl, email, password);
+
+  const hostsUrl = `${cleanUrl}/api/nginx/proxy-hosts`;
+  const response = await fetch(hostsUrl, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch proxy hosts from NPM (${response.status}): ${response.statusText}`);
+  }
+
+  const hosts = await response.json();
+  if (!Array.isArray(hosts)) {
+    throw new Error('Unexpected response format from NPM proxy hosts API');
+  }
+
+  const currentApps = config.apps || [];
+
+  return hosts
+    .filter(h => Array.isArray(h.domain_names) && h.domain_names.length > 0)
+    .map(h => {
+      const primaryDomain = h.domain_names[0];
+      const domainParts = primaryDomain.split('.');
+      const candidateName = domainParts.length > 1 ? domainParts[0] : primaryDomain;
+      const matched = matchPresetForService(candidateName, h.forward_host);
+
+      const isSsl = Boolean(h.ssl_forced || (h.certificate_id && h.certificate_id > 0));
+      const url = `${isSsl ? 'https' : 'http'}://${primaryDomain}`;
+
+      const alreadyAdded = currentApps.some(a => {
+        if (!a.url) return false;
+        try {
+          const aHost = new URL(a.url).hostname.toLowerCase();
+          return aHost === primaryDomain.toLowerCase() || a.url.toLowerCase() === url.toLowerCase();
+        } catch (_) {
+          return a.url.toLowerCase().includes(primaryDomain.toLowerCase());
+        }
+      });
+
+      return {
+        npmId: h.id,
+        domain: primaryDomain,
+        domainNames: h.domain_names,
+        forwardHost: h.forward_host,
+        forwardPort: h.forward_port,
+        forwardScheme: h.forward_scheme || 'http',
+        ssl: isSsl,
+        url: url,
+        name: matched.name,
+        icon: matched.icon,
+        color: matched.color,
+        category: matched.category,
+        description: matched.description,
+        enabled: h.enabled === 1,
+        alreadyAdded
+      };
+    });
+}
+
+// NPM Config info endpoint
+app.get('/api/npm/config', (req, res) => {
+  res.json({
+    url: config.settings?.npmUrl || NPM_DEFAULT_URL,
+    email: config.settings?.npmEmail || NPM_DEFAULT_EMAIL,
+    hasEnvPassword: Boolean(NPM_DEFAULT_PASSWORD)
+  });
+});
+
+// NPM Discover / Preview hosts
+app.post('/api/npm/hosts', async (req, res) => {
+  try {
+    const url = req.body.url || config.settings?.npmUrl || NPM_DEFAULT_URL;
+    const email = req.body.email || config.settings?.npmEmail || NPM_DEFAULT_EMAIL;
+    const password = req.body.password || NPM_DEFAULT_PASSWORD;
+
+    if (!url || !email || !password) {
+      return res.status(400).json({ error: 'NPM URL, Email, and Password are required.' });
+    }
+
+    const hosts = await fetchNpmHostsList(url, email, password);
+    res.json({ success: true, count: hosts.length, hosts });
+  } catch (err) {
+    console.error('[NPM Sync Error]:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// NPM Sync / Import selected hosts
+app.post('/api/npm/sync', async (req, res) => {
+  try {
+    const { url, email, hosts } = req.body;
+    if (!Array.isArray(hosts) || hosts.length === 0) {
+      return res.status(400).json({ error: 'No hosts selected for import.' });
+    }
+
+    config.apps = config.apps || [];
+    let addedCount = 0;
+    const newAppsList = [];
+
+    for (const item of hosts) {
+      if (!item.url || !item.name) continue;
+
+      const existingIndex = config.apps.findIndex(a => {
+        if (!a.url) return false;
+        try {
+          return new URL(a.url).hostname.toLowerCase() === new URL(item.url).hostname.toLowerCase();
+        } catch (_) {
+          return a.url === item.url;
+        }
+      });
+
+      const newApp = {
+        id: existingIndex >= 0 ? config.apps[existingIndex].id : 'app_npm_' + (item.npmId || Date.now()) + '_' + Math.random().toString(36).substring(2, 7),
+        name: item.name,
+        category: item.category || 'infrastructure',
+        description: item.description || `Forwarded to ${item.forwardHost || ''}:${item.forwardPort || ''}`,
+        url: item.url,
+        icon: item.icon || 'globe',
+        color: item.color || '#3B82F6',
+        pinned: false,
+        healthCheck: true
+      };
+
+      if (existingIndex >= 0) {
+        config.apps[existingIndex] = { ...config.apps[existingIndex], ...newApp };
+      } else {
+        config.apps.push(newApp);
+        addedCount++;
+      }
+      newAppsList.push(newApp);
+    }
+
+    // Save NPM connection settings
+    config.settings = config.settings || {};
+    if (url) config.settings.npmUrl = url;
+    if (email) config.settings.npmEmail = email;
+
+    saveConfig(config);
+
+    // Run health check for newly imported apps
+    newAppsList.forEach(appItem => {
+      checkAppHealth(appItem).then(health => {
+        io.emit('app_health_update', { id: appItem.id, health });
+      });
+    });
+
+    io.emit('config_updated', config);
+
+    res.json({
+      success: true,
+      addedCount,
+      totalApps: config.apps.length,
+      apps: config.apps
+    });
+  } catch (err) {
+    console.error('[NPM Import Error]:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Export full backup
 app.get('/api/export', (req, res) => {
   res.setHeader('Content-Type', 'application/json');

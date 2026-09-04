@@ -1,0 +1,236 @@
+[
+  {
+    "id": "portainer",
+    "name": "Portainer",
+    "category": "Infrastructure",
+    "description": "Container management interface",
+    "defaultPort": 9000,
+    "color": "#13BEF9",
+    "icon": "container"
+  },
+  {
+    "id": "pihole",
+    "name": "Pi-hole",
+    "category": "Networking",
+    "description": "Network-wide ad blocking via DNS",
+    "defaultPort": 80,
+    "color": "#F60D1A",
+    "icon": "shield"
+  },
+  {
+    "id": "adguard",
+    "name": "AdGuard Home",
+    "category": "Networking",
+    "description": "Network-wide ads & trackers blocking DNS server",
+    "defaultPort": 3000,
+    "color": "#68BC71",
+    "icon": "shield-check"
+  },
+  {
+    "id": "homeassistant",
+    "name": "Home Assistant",
+    "category": "Smart Home",
+    "description": "Open source home automation platform",
+    "defaultPort": 8123,
+    "color": "#41BDF5",
+    "icon": "home"
+  },
+  {
+    "id": "jellyfin",
+    "name": "Jellyfin",
+    "category": "Media",
+    "description": "Free software media system",
+    "defaultPort": 8096,
+    "color": "#AA5CC3",
+    "icon": "film"
+  },
+  {
+    "id": "plex",
+    "name": "Plex",
+    "category": "Media",
+    "description": "Media streaming and server",
+    "defaultPort": 32400,
+    "color": "#E5A00D",
+    "icon": "play-circle"
+  },
+  {
+    "id": "nextcloud",
+    "name": "Nextcloud",
+    "category": "Storage",
+    "description": "Self-hosted productivity and cloud storage",
+    "defaultPort": 8080,
+    "color": "#0082C9",
+    "icon": "cloud"
+  },
+  {
+    "id": "npm",
+    "name": "Nginx Proxy Manager",
+    "category": "Networking",
+    "description": "Expose web services easily and securely",
+    "defaultPort": 81,
+    "color": "#F15833",
+    "icon": "globe"
+  },
+  {
+    "id": "uptimekuma",
+    "name": "Uptime Kuma",
+    "category": "Infrastructure",
+    "description": "Self-hosted monitoring tool",
+    "defaultPort": 3001,
+    "color": "#5CDD8B",
+    "icon": "activity"
+  },
+  {
+    "id": "qbittorrent",
+    "name": "qBittorrent",
+    "category": "Media",
+    "description": "Bittorrent client web UI",
+    "defaultPort": 8080,
+    "color": "#2F6799",
+    "icon": "download-cloud"
+  },
+  {
+    "id": "transmission",
+    "name": "Transmission",
+    "category": "Media",
+    "description": "Fast, easy BitTorrent client",
+    "defaultPort": 9091,
+    "color": "#D43434",
+    "icon": "download"
+  },
+  {
+    "id": "grafana",
+    "name": "Grafana",
+    "category": "Infrastructure",
+    "description": "Operational dashboards & analytics",
+    "defaultPort": 3000,
+    "color": "#F46800",
+    "icon": "bar-chart-2"
+  },
+  {
+    "id": "prometheus",
+    "name": "Prometheus",
+    "category": "Infrastructure",
+    "description": "Monitoring system and time series database",
+    "defaultPort": 9090,
+    "color": "#E6522C",
+    "icon": "cpu"
+  },
+  {
+    "id": "sonarr",
+    "name": "Sonarr",
+    "category": "Media",
+    "description": "Smart PVR for newsgroup and bittorrent users",
+    "defaultPort": 8989,
+    "color": "#00CCFF",
+    "icon": "tv"
+  },
+  {
+    "id": "radarr",
+    "name": "Radarr",
+    "category": "Media",
+    "description": "Movie collection manager for Usenet and BitTorrent",
+    "defaultPort": 7878,
+    "color": "#FFC230",
+    "icon": "film"
+  },
+  {
+    "id": "vaultwarden",
+    "name": "Vaultwarden",
+    "category": "Tools",
+    "description": "Lightweight Bitwarden compatible password manager",
+    "defaultPort": 80,
+    "color": "#175DDC",
+    "icon": "lock"
+  },
+  {
+    "id": "proxmox",
+    "name": "Proxmox VE",
+    "category": "Infrastructure",
+    "description": "Enterprise virtualization environment",
+    "defaultPort": 8006,
+    "color": "#E57000",
+    "icon": "server"
+  },
+  {
+    "id": "truenas",
+    "name": "TrueNAS",
+    "category": "Storage",
+    "description": "Open storage operating system",
+    "defaultPort": 80,
+    "color": "#0095D5",
+    "icon": "hard-drive"
+  },
+  {
+    "id": "wireguard",
+    "name": "WireGuard / WG-Easy",
+    "category": "Networking",
+    "description": "VPN server web administration",
+    "defaultPort": 51821,
+    "color": "#88171A",
+    "icon": "key"
+  },
+  {
+    "id": "tailscale",
+    "name": "Tailscale Admin",
+    "category": "Networking",
+    "description": "Zero config mesh VPN management",
+    "defaultPort": 443,
+    "color": "#24292F",
+    "icon": "share-2"
+  },
+  {
+    "id": "paperless",
+    "name": "Paperless-ngx",
+    "category": "Tools",
+    "description": "Document management system",
+    "defaultPort": 8000,
+    "color": "#0D9488",
+    "icon": "file-text"
+  },
+  {
+    "id": "it-tools",
+    "name": "IT-Tools",
+    "category": "Tools",
+    "description": "Handy collection of tools for developers",
+    "defaultPort": 80,
+    "color": "#3B82F6",
+    "icon": "tool"
+  },
+  {
+    "id": "filebrowser",
+    "name": "File Browser",
+    "category": "Storage",
+    "description": "Web file manager for your server",
+    "defaultPort": 80,
+    "color": "#15803D",
+    "icon": "folder"
+  },
+  {
+    "id": "cockpit",
+    "name": "Cockpit",
+    "category": "Infrastructure",
+    "description": "Web-based graphical interface for Linux servers",
+    "defaultPort": 9090,
+    "color": "#0066CC",
+    "icon": "terminal"
+  },
+  {
+    "id": "dozzle",
+    "name": "Dozzle",
+    "category": "Infrastructure",
+    "description": "Real-time log viewer for Docker containers",
+    "defaultPort": 8080,
+    "color": "#F59E0B",
+    "icon": "align-left"
+  },
+  {
+    "id": "syncthing",
+    "name": "Syncthing",
+    "category": "Storage",
+    "description": "Continuous decentralized file synchronization",
+    "defaultPort": 8384,
+    "color": "#1F77B4",
+    "icon": "refresh-cw"
+  }
+]

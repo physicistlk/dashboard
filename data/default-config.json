@@ -1,0 +1,116 @@
+{
+  "settings": {
+    "siteTitle": "Dashboard",
+    "theme": "glass-dark",
+    "customWallpaper": "",
+    "blurAmount": 16,
+    "statsRefreshMs": 2000,
+    "searchEngine": "google",
+    "openInNewTab": true,
+    "showCpuWidget": true,
+    "showGpuWidget": true,
+    "showRamWidget": true,
+    "showStorageWidget": true,
+    "showNetworkWidget": true,
+    "pingIntervalMs": 20000
+  },
+  "categories": [
+    { "id": "all", "name": "All", "icon": "grid" },
+    { "id": "infrastructure", "name": "Infrastructure", "icon": "server" },
+    { "id": "networking", "name": "Networking", "icon": "wifi" },
+    { "id": "media", "name": "Media", "icon": "film" },
+    { "id": "smart-home", "name": "Smart Home", "icon": "home" },
+    { "id": "storage", "name": "Storage", "icon": "hard-drive" },
+    { "id": "tools", "name": "Tools", "icon": "tool" }
+  ],
+  "apps": [
+    {
+      "id": "app_1",
+      "name": "Portainer",
+      "category": "infrastructure",
+      "description": "Container Management Portal",
+      "url": "http://localhost:9000",
+      "icon": "container",
+      "color": "#13BEF9",
+      "pinned": true,
+      "healthCheck": true
+    },
+    {
+      "id": "app_2",
+      "name": "Pi-hole",
+      "category": "networking",
+      "description": "DNS Ad-Blocking & Sinkhole",
+      "url": "http://localhost/admin",
+      "icon": "shield",
+      "color": "#F60D1A",
+      "pinned": true,
+      "healthCheck": true
+    },
+    {
+      "id": "app_3",
+      "name": "Home Assistant",
+      "category": "smart-home",
+      "description": "Smart Home Automation Hub",
+      "url": "http://localhost:8123",
+      "icon": "home",
+      "color": "#41BDF5",
+      "pinned": true,
+      "healthCheck": true
+    },
+    {
+      "id": "app_4",
+      "name": "Jellyfin",
+      "category": "media",
+      "description": "Personal Media Streaming Server",
+      "url": "http://localhost:8096",
+      "icon": "film",
+      "color": "#AA5CC3",
+      "pinned": false,
+      "healthCheck": true
+    },
+    {
+      "id": "app_5",
+      "name": "Nginx Proxy Manager",
+      "category": "networking",
+      "description": "Reverse Proxy & SSL Manager",
+      "url": "http://localhost:81",
+      "icon": "globe",
+      "color": "#F15833",
+      "pinned": false,
+      "healthCheck": true
+    },
+    {
+      "id": "app_6",
+      "name": "Uptime Kuma",
+      "category": "infrastructure",
+      "description": "Self-Hosted Monitoring & Uptime",
+      "url": "http://localhost:3001",
+      "icon": "activity",
+      "color": "#5CDD8B",
+      "pinned": false,
+      "healthCheck": true
+    },
+    {
+      "id": "app_7",
+      "name": "Nextcloud",
+      "category": "storage",
+      "description": "Private Cloud Storage & Sync",
+      "url": "http://localhost:8080",
+      "icon": "cloud",
+      "color": "#0082C9",
+      "pinned": false,
+      "healthCheck": true
+    },
+    {
+      "id": "app_8",
+      "name": "Grafana",
+      "category": "infrastructure",
+      "description": "Telemetry & Metrics Dashboards",
+      "url": "http://localhost:3000",
+      "icon": "bar-chart-2",
+      "color": "#F46800",
+      "pinned": false,
+      "healthCheck": true
+    }
+  ]
+}

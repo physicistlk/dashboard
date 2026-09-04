@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2338bdf8'><rect x='3' y='3' width='7' height='7' rx='1'/><rect x='14' y='3' width='7' height='7' rx='1'/><rect x='14' y='14' width='7' height='7' rx='1'/><rect x='3' y='14' width='7' height='7' rx='1'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-glass-dark">
+  <!-- Dynamic Background Wallpaper Overlay -->
+  <div id="wallpaperOverlay" class="wallpaper-overlay"></div>
+
+  <div class="dashboard-wrapper">
+    <!-- Top Header Bar -->
+    <header class="top-header">
+      <div class="header-brand">
+        <div class="brand-logo">
+          <span class="logo-text-dash">dash</span><span class="logo-dot">.</span><span class="logo-text-heimdall">heimdall</span>
+        </div>
+        <div class="server-status-badge">
+          <span class="pulse-indicator"></span>
+          <span id="headerHostname">Homelab Server</span>
+        </div>
+      </div>
+
+      <!-- Unified Search & Web Launcher -->
+      <div class="search-container">
+        <div class="search-input-wrapper">
+          <span class="search-icon" id="searchEngineIcon">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </span>
+          <input type="text" id="appSearchInput" placeholder="Search apps or press Enter to search the web... [ / ]" autocomplete="off" spellcheck="false">
+          <button id="searchWebBtn" class="search-btn" title="Search the Web">Search</button>
+        </div>
+      </div>
+
+      <!-- Header Actions -->
+      <div class="header-actions">
+        <div class="host-pill" id="hostSpecsPill" title="Server Specs & Uptime">
+          <div class="host-pill-top">
+            <span class="host-os" id="hostOsName">Linux</span>
+            <span class="host-temp" id="hostCpuTemp" title="CPU Temperature">--°C</span>
+          </div>
+          <span class="host-uptime" id="hostUptime">Up: ...</span>
+        </div>
+
+        <button id="toggleStatsBtn" class="btn-icon" title="Toggle Real-Time Stats" aria-label="Toggle Stats">
+          <svg viewBox="0 0 24 24" width="19" height="19" stroke="currentColor" stroke-width="2" fill="none"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          <span class="btn-label">Stats</span>
+        </button>
+
+        <button id="addAppBtn" class="btn-primary" title="Add Application" aria-label="Add Application">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Add App</span>
+        </button>
+
+        <button id="categoriesBtn" class="btn-icon" title="Manage Categories" aria-label="Categories">
+          <svg viewBox="0 0 24 24" width="19" height="19" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+        </button>
+
+        <button id="settingsBtn" class="btn-icon" title="Dashboard Settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" width="19" height="19" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Dashdot Real-Time Monitoring Section -->
+    <section id="statsSection" class="stats-grid">
+      <!-- CPU Widget -->
+      <div class="stat-card" id="cpuCard">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="#38bdf8" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+            <span>Processor</span>
+          </div>
+          <div class="card-badges">
+            <span class="badge badge-temp" id="cpuTempBadge">--°C</span>
+            <span class="badge" id="cpuCoresBadge">-- Cores</span>
+          </div>
+        </div>
+        <div class="stat-body">
+          <div class="gauge-donut">
+            <svg viewBox="0 0 36 36" class="circular-chart">
+              <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              <path id="cpuCirclePath" class="circle-cpu" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            </svg>
+            <div class="gauge-text">
+              <span class="gauge-value" id="cpuLoadValue">0%</span>
+              <span class="gauge-label">LOAD</span>
+            </div>
+          </div>
+          <div class="stat-info">
+            <div class="stat-subhead" id="cpuModelText">Detecting CPU...</div>
+            <div class="stat-detail"><span id="cpuTempDetail">Temp: <strong id="cpuTempText">--°C</strong> • </span>Load Avg: <strong id="cpuLoadAvg">0.00, 0.00, 0.00</strong></div>
+            <div class="sparkline-wrapper">
+              <canvas id="cpuSparkline" width="180" height="38"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GPU Widget -->
+      <div class="stat-card" id="gpuCard">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="#06b6d4" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8" y="8" width="8" height="8" rx="1"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="15" x2="4" y2="15"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="15" x2="23" y2="15"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/></svg>
+            <span>Graphics (GPU)</span>
+          </div>
+          <div class="card-badges">
+            <span class="badge badge-temp" id="gpuTempBadge">--°C</span>
+            <span class="badge" id="gpuVendorBadge">GPU</span>
+          </div>
+        </div>
+        <div class="stat-body">
+          <div class="gauge-donut">
+            <svg viewBox="0 0 36 36" class="circular-chart">
+              <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              <path id="gpuCirclePath" class="circle-gpu" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            </svg>
+            <div class="gauge-text">
+              <span class="gauge-value" id="gpuLoadValue">0%</span>
+              <span class="gauge-label">LOAD</span>
+            </div>
+          </div>
+          <div class="stat-info">
+            <div class="stat-subhead" id="gpuModelText">Detecting Graphics...</div>
+            <div class="stat-detail"><span id="gpuClockDetail">Freq: <strong id="gpuClockText">-- MHz</strong> • </span><span id="gpuMemoryDetail">VRAM: <strong id="gpuMemoryText">Shared</strong></span></div>
+            <div class="sparkline-wrapper">
+              <canvas id="gpuSparkline" width="180" height="38"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RAM Widget -->
+      <div class="stat-card" id="ramCard">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="#a855f7" stroke-width="2" fill="none"><line x1="2" y1="12" x2="22" y2="12"/><path d="M6 12V4h12v8"/><line x1="6" y1="20" x2="6" y2="12"/><line x1="10" y1="20" x2="10" y2="12"/><line x1="14" y1="20" x2="14" y2="12"/><line x1="18" y1="20" x2="18" y2="12"/></svg>
+            <span>Memory</span>
+          </div>
+          <span class="badge" id="ramTotalBadge">-- GB</span>
+        </div>
+        <div class="stat-body">
+          <div class="gauge-donut">
+            <svg viewBox="0 0 36 36" class="circular-chart">
+              <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              <path id="ramCirclePath" class="circle-ram" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            </svg>
+            <div class="gauge-text">
+              <span class="gauge-value" id="ramLoadValue">0%</span>
+              <span class="gauge-label">USED</span>
+            </div>
+          </div>
+          <div class="stat-info">
+            <div class="stat-subhead" id="ramUsageText">0 GB / 0 GB</div>
+            <div class="stat-detail">Available: <strong id="ramAvailText">-- GB</strong></div>
+            <div class="sparkline-wrapper">
+              <canvas id="ramSparkline" width="180" height="38"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Storage Widget -->
+      <div class="stat-card" id="storageCard">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="#10b981" stroke-width="2" fill="none"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>
+            <span>Storage Disks</span>
+          </div>
+          <span class="badge" id="disksCountBadge">0 Mounted</span>
+        </div>
+        <div class="stat-body disk-body">
+          <div id="diskListContainer" class="disk-list">
+            <div class="disk-item-placeholder">Reading storage volumes...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Network Widget -->
+      <div class="stat-card" id="networkCard">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="#f59e0b" stroke-width="2" fill="none"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+            <span>Network Traffic</span>
+          </div>
+          <span class="badge" id="netIfaceBadge">eth0</span>
+        </div>
+        <div class="stat-body network-body">
+          <div class="net-metric">
+            <div class="net-direction">
+              <span class="net-arrow download-arrow">↓</span>
+              <span class="net-label">Download</span>
+            </div>
+            <div class="net-speed" id="netRxSpeed">0 KB/s</div>
+          </div>
+          <div class="net-divider"></div>
+          <div class="net-metric">
+            <div class="net-direction">
+              <span class="net-arrow upload-arrow">↑</span>
+              <span class="net-label">Upload</span>
+            </div>
+            <div class="net-speed" id="netTxSpeed">0 KB/s</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Heimdall Application Launcher Section -->
+    <main class="apps-section">
+      <!-- Category Filter Tabs -->
+      <nav class="category-tabs" id="categoryTabsContainer">
+        <!-- Injected via JavaScript -->
+      </nav>
+
+      <!-- Apps Grid -->
+      <div class="apps-grid" id="appsGridContainer">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <div id="noAppsNotice" class="no-apps-notice" style="display: none;">
+        <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <h3>No applications found</h3>
+        <p>Try clearing your search or add a new application tile.</p>
+        <button class="btn-primary" onclick="openAddAppModal()">+ Add New Application</button>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <span>Dashboard Container • Combines Dash. (Dashdot) & Heimdall Homelab Engine</span>
+    </footer>
+  </div>
+
+  <!-- Modal: Add / Edit Application -->
+  <div class="modal-backdrop" id="appModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="appModalTitle">Add Application</h3>
+        <button class="modal-close-btn" onclick="closeAppModal()">&times;</button>
+      </div>
+      <form id="appForm" onsubmit="handleSaveApp(event)">
+        <input type="hidden" id="appIdField">
+
+        <div class="form-group">
+          <label for="presetSelect">Choose from Presets (Autocomplete)</label>
+          <select id="presetSelect" onchange="handlePresetSelect(this.value)">
+            <option value="">-- Custom Application or select preset --</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label for="appNameField">App Name *</label>
+            <input type="text" id="appNameField" required placeholder="e.g. Portainer, Plex, Home Assistant">
+          </div>
+          <div class="form-group flex-1">
+            <label for="appCategoryField">Category</label>
+            <select id="appCategoryField" required>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="appUrlField">Service URL *</label>
+          <div class="input-with-action">
+            <input type="url" id="appUrlField" required placeholder="http://192.168.1.100:9000">
+            <button type="button" class="btn-secondary" onclick="testAppUrlPing()" title="Test Connection">Test Ping</button>
+          </div>
+          <span id="urlTestResult" class="form-helper-text"></span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label for="appIconField">Icon Identifier or Image URL</label>
+            <div class="icon-input-group">
+              <input type="text" id="appIconField" placeholder="e.g. container, film, or https://...png">
+              <div id="iconPreview" class="icon-preview-box"></div>
+            </div>
+          </div>
+          <div class="form-group flex-1">
+            <label for="appColorField">Accent Color</label>
+            <div class="color-input-group">
+              <input type="color" id="appColorField" value="#38bdf8">
+              <span id="colorHexLabel">#38bdf8</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="appDescField">Description / Subtitle</label>
+          <input type="text" id="appDescField" placeholder="e.g. Docker container manager">
+        </div>
+
+        <div class="form-checkboxes">
+          <label class="checkbox-label">
+            <input type="checkbox" id="appHealthCheckField" checked>
+            <span>Enable Real-time Health Ping Check</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="appPinnedField">
+            <span>Pin to Top</span>
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeAppModal()">Cancel</button>
+          <button type="submit" class="btn-primary" id="saveAppSubmitBtn">Save Application</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Category Manager -->
+  <div class="modal-backdrop" id="categoryModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Manage Categories</h3>
+        <button class="modal-close-btn" onclick="closeCategoryModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="add-cat-row">
+          <input type="text" id="newCategoryName" placeholder="New Category Name (e.g. Smart Home)">
+          <button type="button" class="btn-primary" onclick="handleAddCategory()">Add</button>
+        </div>
+        <div class="category-list" id="categoryManagerList">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeCategoryModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Settings -->
+  <div class="modal-backdrop" id="settingsModal" style="display: none;">
+    <div class="modal-card modal-large">
+      <div class="modal-header">
+        <h3>Dashboard Settings</h3>
+        <button class="modal-close-btn" onclick="closeSettingsModal()">&times;</button>
+      </div>
+      <form id="settingsForm" onsubmit="handleSaveSettings(event)">
+        <div class="settings-grid">
+          <!-- Left Column -->
+          <div class="settings-col">
+            <h4>Appearance & Themes</h4>
+            <div class="form-group">
+              <label for="themeSelect">Theme Preset</label>
+              <select id="themeSelect" onchange="handleThemeChange(this.value)">
+                <option value="glass-dark">Dash Glass Dark (Default)</option>
+                <option value="glass-light">Glass Light</option>
+                <option value="oled">OLED Pitch Black</option>
+                <option value="cyberpunk">Cyberpunk Neon</option>
+                <option value="nord">Nord Frost</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="wallpaperInput">Custom Wallpaper URL</label>
+              <input type="url" id="wallpaperInput" placeholder="https://example.com/wallpaper.jpg">
+            </div>
+
+            <div class="form-group">
+              <label for="blurSlider">Glass Blur Intensity (<span id="blurValueLabel">16px</span>)</label>
+              <input type="range" id="blurSlider" min="0" max="30" value="16" oninput="handleBlurChange(this.value)">
+            </div>
+          </div>
+
+          <!-- Right Column -->
+          <div class="settings-col">
+            <h4>Engine & Search</h4>
+            <div class="form-group">
+              <label for="searchEngineSelect">Default Web Search Provider</label>
+              <select id="searchEngineSelect">
+                <option value="google">Google</option>
+                <option value="duckduckgo">DuckDuckGo</option>
+                <option value="brave">Brave Search</option>
+                <option value="bing">Bing</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="statsRefreshSelect">System Stats Refresh Rate</label>
+              <select id="statsRefreshSelect">
+                <option value="1000">1 Second (Ultra-responsive)</option>
+                <option value="2000">2 Seconds (Recommended)</option>
+                <option value="5000">5 Seconds (Low resource)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="pingIntervalSelect">Health Check Interval</label>
+              <select id="pingIntervalSelect">
+                <option value="10000">Every 10 seconds</option>
+                <option value="20000">Every 20 seconds (Recommended)</option>
+                <option value="60000">Every 60 seconds</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Widget Visibility</label>
+              <div class="form-checkboxes">
+                <label class="checkbox-label"><input type="checkbox" id="showCpuWidgetCheck" checked> <span>CPU Widget</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="showGpuWidgetCheck" checked> <span>GPU Widget</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="showRamWidgetCheck" checked> <span>RAM Widget</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="showStorageWidgetCheck" checked> <span>Storage Widget</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="showNetworkWidgetCheck" checked> <span>Network Widget</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="modal-divider">
+
+        <div class="backup-section">
+          <h4>Backup & Restore Configuration</h4>
+          <p class="section-desc">Download your apps, settings, and layout as JSON or import an existing backup.</p>
+          <div class="backup-actions">
+            <button type="button" class="btn-secondary" onclick="downloadBackup()">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Download JSON Backup</span>
+            </button>
+            <label class="btn-secondary file-upload-btn">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Restore from JSON</span>
+              <input type="file" id="importFileInput" accept=".json" onchange="handleImportBackup(event)" style="display: none;">
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeSettingsModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Save Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Socket.IO and Frontend Scripts -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="icons.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

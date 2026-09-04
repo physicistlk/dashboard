@@ -1,0 +1,36 @@
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dashboard:latest
+    container_name: dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATA_DIR=/app/data
+    volumes:
+      # Persistent homelab configuration, apps, categories, and settings
+      - ./data:/app/data
+      # Read-only host filesystem mount for real-time hardware telemetry (Dashdot mode)
+      - /:/mnt/host:ro
+      - /etc/os-release:/mnt/host/etc/os-release:ro
+      - /proc:/mnt/host/proc:ro
+      - /sys:/mnt/host/sys:ro
+    # GPU device access for Intel QuickSync / AMD Radeon / Direct Rendering Manager telemetry
+    devices:
+      - /dev/dri:/dev/dri
+    # Privileged flag enables reading host hardware sensors (temperature, fan speeds, CPU/GPU load)
+    privileged: true
+    # Note for NVIDIA GPUs: uncomment below or use '--gpus all' with nvidia-container-toolkit
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+

@@ -14,7 +14,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY package*.json ./
-RUN npm ci --omit=dev || npm install --omit=dev
+RUN npm install --omit=dev --no-audit --no-fund --loglevel=info
 
 # Copy application files
 COPY server.js ./

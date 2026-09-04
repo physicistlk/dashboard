@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: dashboard:latest
+    image: ghcr.io/physicistlk/dashboard:latest
     container_name: dashboard
     restart: unless-stopped
     ports:

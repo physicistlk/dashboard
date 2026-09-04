@@ -67,34 +67,32 @@ A modern, unified homelab web portal and server dashboard built for mini PCs and
 
 ## 🚀 Running on Your Mini PC Server
 
-### Option A: Docker Compose (Recommended)
+### Option A: Pull Pre-built Image with Docker Compose (Fastest & Recommended)
 
-1. Copy or clone the `container` folder to your mini PC server.
-2. In the folder, start the container:
+Since GitHub Actions builds and publishes multi-arch images (`linux/amd64` & `linux/arm64` for Raspberry Pi 5), you don't need to compile anything on your Pi:
+
+1. Clone or copy your repository:
    ```bash
+   git clone https://github.com/physicistlk/dashboard.git
+   cd dashboard
+   ```
+2. Pull the pre-built image & launch:
+   ```bash
+   docker compose pull
    docker compose up -d
    ```
 3. Open your browser and navigate to:
    ```
-   http://<MINI_PC_IP>:3000
+   http://<SERVER_OR_PI_IP>:3000
    ```
-
-To stop:
-```bash
-docker compose down
-```
 
 ---
 
-### Option B: Docker CLI
+### Option B: Docker CLI (One-Line Run)
 
-Build and run using standard Docker commands:
+Run the pre-built image directly without cloning:
 
 ```bash
-# 1. Build the image
-docker build -t dashboard:latest .
-
-# 2. Run the container
 docker run -d \
   --name dashboard \
   --restart unless-stopped \
@@ -104,7 +102,7 @@ docker run -d \
   -v /sys:/mnt/host/sys:ro \
   --device /dev/dri:/dev/dri \
   --privileged \
-  dashboard:latest
+  ghcr.io/physicistlk/dashboard:latest
 ```
 
 ---

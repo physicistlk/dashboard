@@ -18,7 +18,8 @@ services:
       # - NPM_PASSWORD=changeme
     networks:
       - default
-      - proxy
+      # Uncomment to attach to an existing Nginx Proxy Manager network:
+      # - proxy
     volumes:
       # Persistent homelab configuration, apps, categories, and settings
       - ./data:/app/data
@@ -27,9 +28,10 @@ services:
       - /etc/os-release:/mnt/host/etc/os-release:ro
       - /proc:/mnt/host/proc:ro
       - /sys:/mnt/host/sys:ro
-    # GPU device access for Intel QuickSync / AMD Radeon / Direct Rendering Manager telemetry
-    devices:
-      - /dev/dri:/dev/dri
+    # GPU device access: privileged: true already grants access to host devices.
+    # Only uncomment below if your host specifically has /dev/dri initialized (may crash on headless Pi/VMs if missing)
+    # devices:
+    #   - /dev/dri:/dev/dri
     # Privileged flag enables reading host hardware sensors (temperature, fan speeds, CPU/GPU load)
     privileged: true
     # Note for NVIDIA GPUs: uncomment below or use '--gpus all' with nvidia-container-toolkit
@@ -41,7 +43,8 @@ services:
     #           count: all
     #           capabilities: [gpu]
 
-networks:
-  proxy:
-    external: true
+# Uncomment if using Nginx Proxy Manager on a shared 'proxy' network:
+# networks:
+#   proxy:
+#     external: true
 

@@ -35,7 +35,7 @@ EXPOSE 3110
 
 # Container Healthcheck
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:3110/api/health || exit 1
+  CMD curl -f http://127.0.0.1:3110/api/health || exit 1
 
 # Start the application
 CMD ["node", "server.js"]

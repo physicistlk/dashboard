@@ -27,15 +27,15 @@ RUN mkdir -p /app/data && chmod -R 777 /app/data
 
 # Environment configuration
 ENV NODE_ENV=production \
-    PORT=3000 \
+    PORT=3110 \
     DATA_DIR=/app/data
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3110
 
 # Container Healthcheck
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:3000/api/health || exit 1
+  CMD curl -f http://localhost:3110/api/health || exit 1
 
 # Start the application
 CMD ["node", "server.js"]

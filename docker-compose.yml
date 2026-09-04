@@ -7,10 +7,10 @@ services:
     container_name: dashboard
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3110:3110"
     environment:
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=3110
       - DATA_DIR=/app/data
     volumes:
       # Persistent homelab configuration, apps, categories, and settings

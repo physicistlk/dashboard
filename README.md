@@ -83,7 +83,7 @@ Since GitHub Actions builds and publishes multi-arch images (`linux/amd64` & `li
    ```
 3. Open your browser and navigate to:
    ```
-   http://<SERVER_OR_PI_IP>:3000
+   http://<SERVER_OR_PI_IP>:3110
    ```
 
 ---
@@ -96,7 +96,7 @@ Run the pre-built image directly without cloning:
 docker run -d \
   --name dashboard \
   --restart unless-stopped \
-  -p 3000:3000 \
+  -p 3110:3110 \
   -v $(pwd)/data:/app/data \
   -v /:/mnt/host:ro \
   -v /sys:/mnt/host/sys:ro \
@@ -117,7 +117,7 @@ podman build -t dashboard:latest .
 podman run -d \
   --name dashboard \
   --restart unless-stopped \
-  -p 3000:3000 \
+  -p 3110:3110 \
   -v $(pwd)/data:/app/data:Z \
   -v /:/mnt/host:ro \
   -v /sys:/mnt/host/sys:ro \
@@ -142,7 +142,7 @@ podman run -d \
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `PORT` | `3000` | Port the web server listens on inside the container. |
+| `PORT` | `3110` | Port the web server listens on inside the container. |
 | `DATA_DIR` | `/app/data` | Directory where `config.json` is stored. |
 | `NODE_ENV` | `production` | Node.js production environment mode. |
 
@@ -157,4 +157,4 @@ cd ~/container
 npm install
 npm start
 ```
-Then open `http://localhost:3000`.
+Then open `http://localhost:3110`.

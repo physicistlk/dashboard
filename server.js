@@ -7,7 +7,7 @@ const { Server } = require('socket.io');
 const si = require('systeminformation');
 const os = require('os');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3110;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const CONFIG_PATH = path.join(DATA_DIR, 'config.json');
 const DEFAULT_CONFIG_PATH = fs.existsSync(path.join(__dirname, 'defaults', 'default-config.json'))
